@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Columbia University Library Map</title>
+
+    <!-- Styles -->
+    <link href="https://unpkg.com/maplibre-gl@1.14.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <link href="../static/map.css" rel="stylesheet" />
+  </head>
+  
+  <body>
+    <header>
+      <h1>Columbia University Library Map</h1>
+    </header>
+    <main>
+      <div id="map"></div>
+      <aside>
+        <h2>Details of the Pin</h2>
+        <pre id="response"></pre>
+      </aside>
+    </main>
+    <br>
+        This is the Columbia University Library Map. Pan and zoom. Click to see details.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="{{ url_for('index') }}"> <button type="button" class="btn btn-default"> Back To Library </button></a>
+    </footer>
+    <!-- JavaScript dependencies -->
+    <script src="https://unpkg.com/maplibre-gl@1.14.0/dist/maplibre-gl.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1030.0.min.js"></script>
+    <script src="https://unpkg.com/@aws-amplify/core@3.7.0/dist/aws-amplify-core.min.js"></script>
+    
+    <!-- JavaScript for the app -->
+    <script >
+        // Use Signer from @aws-amplify/core
+const { Signer } = window.aws_amplify_core;
+
+// AWS Resources
+// Cognito:
+const identityPoolId = "us-east-2:ca0d6c4d-4461-48a8-a90b-b62401b1de29";
+
+// Amazon Location Service resource names:
+const mapName = "6770_map_new";
+const placesName = "cu_library";
+
+// Extract the region from the Identity Pool ID
+AWS.config.region = identityPoolId.split(":")[0];
+
+// Instantiate a Cognito-backed credential provider
+const credentials = new AWS.CognitoIdentityCredentials({
+  IdentityPoolId: identityPoolId
+});
+
+// Sign requests made by MapLibre GL JS using AWS SigV4:
+function transformRequest(url, resourceType) {
+  if (resourceType === "Style" && !url.includes("://")) {
+    // Resolve to an AWS URL
+    url = `https://maps.geo.${AWS.config.region}.amazonaws.com/maps/v0/maps/${url}/style-descriptor`;
+  }
+
+  if (url.includes("amazonaws.com")) {
+    // Sign AWS requests (with the signature as part of the query string)
+    return {
+      url: Signer.signUrl(url, {
+        access_key: credentials.accessKeyId,
+        secret_key: credentials.secretAccessKey,
+        session_token: credentials.sessionToken,
+      }),
+    };
+  }
+
+  // If not amazonaws.com, falls to here without signing
+  return { url };
+}
+
+// Initialize a map
+async function initializeMap() {
+  // Load credentials and set them up to refresh
+  await credentials.getPromise();
+
+  // Initialize the map
+  const mlglMap = new maplibregl.Map({
+    container: "map", // HTML element ID of map element
+    center: [-73.96298, 40.80643], // Initial map centerpoint
+    zoom: 16, // Initial map zoom
+    style: mapName,
+    transformRequest,
+  });
+
+  // Add navigation control to the top left of the map
+  mlglMap.addControl(new maplibregl.NavigationControl(), "top-left");
+
+  return mlglMap;
+}
+
+async function main() {
+    // Initialize map and AWS SDK for Location Service:
+    const map = await initializeMap();
+
+    const location = new AWS.Location({credentials, region: AWS.config.region});
+
+
+    // Variable to hold marker that will be rendered on click
+    let marker;
+
+    // On mouse click, get results:
+    map.on("click", function(e) {
+
+
+        // Remove any existing marker
+      if(marker) {
+        marker.remove();
+      }
+
+      // Render a marker on clicked point
+      marker = new maplibregl.Marker()
+        .setLngLat([e.lngLat.lng, e.lngLat.lat])
+        .addTo(map);
+
+      // Set up parameters for search call
+      let params = {
+        IndexName: placesName,
+        Position: [e.lngLat.lng, e.lngLat.lat],
+        Language: "en",
+        MaxResults: "5"
+      };
+
+      // Search for results around clicked point
+      location.searchPlaceIndexForPosition(params, function(err, data) {
+        if (err) {
+          // Alert user about an error
+          alert("There was an error searching.");
+
+          // Write JSON response error to HTML
+          document.querySelector("#response").textContent = JSON.stringify(err, undefined, 2);
+        } else {
+          // Write JSON response data to HTML
+          document.querySelector("#response").textContent = JSON.stringify(data, undefined, 2);
+
+          // Display place label in an alert box
+          alert(data.Results[0].Place.Label);      }
+      });
+    });
+  }
+
+main();
+
+    </script>
+  </body>
+</html>
+
+
+
+

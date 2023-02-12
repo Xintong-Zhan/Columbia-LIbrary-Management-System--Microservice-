@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="../static/layui/css/layui.css">
+    <style>{% block style %}{% endblock %}</style>
+</head>
+<body style="background-color:#f2f2f2;height:100%; width:100%;">
+<script src="../static/layui/layui.js"></script>
+
+
+<div class="layui-container">
+<ul class="layui-nav layui-nav-tree layui-nav-side">
+  <span style="color:#BFC0C2;font-size: medium;margin-left: 20px;line-height: 50px;">Book Management System</span>
+  <li class="layui-nav-item">
+    <a href="javascript:;">Book Management</a>
+    <dl class="layui-nav-child">
+      <dd><a href="javascript:;">Storage</a></dd>
+      <dd><a href="javascript:;">Borrow</a></dd>
+      <dd><a href="">Return Book</a></dd>
+      <dd><a href="">Book Cancellation</a></dd>
+    </dl>
+  </li>
+  <li class="layui-nav-item">
+    <a href="javascript:;">Information Setting</a>
+    <dl class="layui-nav-child">
+      <dd><a href="">Admin Info Setting</a></dd>
+      <dd><a href="">Library Info Setting</a></dd>
+      <dd><a href="">Book Thesaurus Setting</a></dd>
+    </dl>
+  </li>
+  <li class="layui-nav-item">
+    <a href="http://127.0.0.1:5000/search_book">Book Information Query</a>
+  </li>
+    <li class="layui-nav-item">
+    <a href="javascript:;">Student Information Query</a>
+  </li>
+</ul>
+
+<ul class="layui-nav" style="text-align:right;background-color:#FFFFFF;width:110%;">
+  <li class="layui-nav-item">
+    <a href="" style="color:#000000">Personal Center<span class="layui-badge-dot"></span></a>
+     <dl class="layui-nav-child">
+      <dd><a href="javascript:;">Edit Information</a></dd>
+      <dd><a href="javascript:;">Logout</a></dd>
+    </dl>
+  </li>
+</ul>
+
+
+<div class="layui-card layui-row layui-col-space10" style="margin:15px 100px;width:100%;">
+    <div class="layui-card-header">{% block card %}{% endblock %}</div>
+    <div class="layui-card-body" style="height:480px">
+        {% block body %}
+        {% endblock %}
+    </div>
+</div>
+
+<script>
+{% block script %}
+
+{% endblock %}
+</script>
+</body>
+</html>
